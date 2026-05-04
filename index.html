@@ -1,0 +1,208 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atividade do Atila</title>
+    <link rel="stylesheet" type="text/css" href="./style.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>Simulador: Algoritmo de Berkeley</h1>
+    
+    <div class="grid">
+        <!-- Servidor -->
+        <div class="section">
+            <h2>1. Servidor</h2>
+            <div class="input-group">
+                <label>Hora Atual do Servidor:</label>
+                <input type="time" id="serverTime" value="01:00">
+            </div>
+            <button class="btn-primary" onclick="executarSincronizacao()">Sincronizar Relógios</button>
+        </div>
+
+        <!-- Cadastro de Clientes -->
+        <div class="section">
+            <h2>2. Novos Clientes</h2>
+            <div class="input-group">
+                <label>Nome do Cliente:</label>
+                <input type="text" id="clientName" placeholder="Ex: C1">
+            </div>
+            <div class="input-group">
+                <label>Hora Local (Entrada):</label>
+                <input type="time" id="clientLocalTime">
+            </div>
+            <button class="btn-success" style="width: 100%;" onclick="addClientUI()">Adicionar Cliente à Rede</button>
+        </div>
+    </div>
+
+    <!-- Lista de Clientes e Requisições -->
+    <div class="section">
+        <h2>3. Processos na Rede</h2>
+        <div id="clientsList">
+            <p style="color: #888;">Nenhum cliente conectado ainda.</p>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div id="resultsArea" style="display: none;">
+        <div class="result-box">
+            <h3>Resultados da Sincronização</h3>
+            <p><strong>Relógio Lógico do Sistema:</strong> <span id="logicClock">--:--</span></p>
+        </div>
+
+        <div class="section">
+            <h3>Tabela de Ajustes (Delays)</h3>
+            <table id="delayTable">
+                <thead>
+                    <tr>
+                        <th>Processo</th>
+                        <th>Hora Informada</th>
+                        <th>Ajuste (Segundos)</th>
+                        <th>Status do Relógio</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h3>Fila de Acesso ao Recurso (Ordenada)</h3>
+            <table id="queueTable">
+                <thead>
+                    <tr>
+                        <th>Ordem</th>
+                        <th>Processo</th>
+                        <th>Hora Envio (Local)</th>
+                        <th>Hora Envio (Sincronizada)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="./utils.js"></script>
+<script src="./server.js"></script>
+<script>
+
+    function addClientUI() {
+        const nome = document.getElementById('clientName').value;
+        const hora = document.getElementById('clientLocalTime').value;
+
+        if(!nome || !hora) {
+            alert("preencha o nome e a hora do cliente!");
+            return;
+        }
+
+        if(filaDeClientes.length != 0){
+            let nomeRepetido = false;
+            filaDeClientes.forEach((cliente) => {
+                if(nome === cliente.nome){
+                    nomeRepetido = true;
+                    return;
+                }
+            })
+
+            if(nomeRepetido){
+                alert(`um processo com esse nome (${nome}) já existe!`)
+                return;
+            }
+        }
+
+        const novoCliente = criarCliente(nome, hora);
+        filaDeClientes.push(novoCliente);
+        
+        renderClients();
+        document.getElementById('clientName').value = "";
+    }
+
+    function renderClients() {
+        const list = document.getElementById('clientsList');
+        list.innerHTML = "";
+        
+        filaDeClientes.forEach((c, index) => {
+            const div = document.createElement('div');
+            div.className = 'client-card';
+            div.innerHTML = `
+                <span><strong>${c.nome}</strong> (Relógio Local: ${c.horarioDeEntrada})</span>
+                <div>
+                    <input type="time" id="sendTime_${index}" style="width: 100px; display: inline-block;">
+                    <button class="btn-primary" onclick="fazerRequisicao(${index})">Pedir Recurso</button>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    function fazerRequisicao(index) {
+        const sendTimeInput = document.getElementById(`sendTime_${index}`).value;
+        if(!sendTimeInput) {
+            alert("informe o horário de envio para este cliente!");
+            return;
+        }
+
+        const cliente = filaDeClientes[index];
+        cliente.enviar(sendTimeInput);
+
+        filaDeRequisicoes.push({
+            nome: cliente.nome,
+            envioOriginal: sendTimeInput,
+            horarioDeEnvioSincronizado: 0
+        });
+
+        alert(`requisição de ${cliente.nome} registrada! clique em 'Sincronizar' para processar a fila.`);
+    }
+
+    function executarSincronizacao() {
+        if(filaDeClientes.length === 0) {
+            alert("adicione pelo menos um cliente para sincronizar.");
+            return;
+        }
+
+        const hServidor = document.getElementById('serverTime').value;
+        const hSinc = calcularHorarioSincronizado(hServidor, filaDeClientes);
+
+        delaysDeHorarioDosClientes = [];
+        calcularDelaysDosClientes(hServidor, filaDeClientes);
+
+        filaDeRequisicoes.forEach(req => {
+            const infoDelay = delaysDeHorarioDosClientes.find(d => d.nome === req.nome);
+            const delay = infoDelay ? infoDelay.delay : 0;
+            
+            req.horarioDeEnvioSincronizado = converterHorarioParaSegundos(req.envioOriginal) + delay;
+            console.log(infoDelay, delay, req.horarioDeEnvioSincronizado)
+        });
+
+        organizarFilaDeRequisicoes();
+
+        document.getElementById('resultsArea').style.display = "block";
+        document.getElementById('logicClock').innerText = converterSegundosParaHorario(hSinc);
+
+        const delayBody = document.querySelector('#delayTable tbody');
+        delayBody.innerHTML = "";
+        delaysDeHorarioDosClientes.forEach(d => {
+            const row = delayBody.insertRow();
+            row.insertCell(0).innerText = d.nome;
+            row.insertCell(1).innerText = filaDeClientes.find(c => c.nome === d.nome).horarioDeEntrada;
+            row.insertCell(2).innerText = converterSegundosParaHorario(d.delay);
+            row.insertCell(3).innerText = d.delay >= 0 ? "Atrasado (Adiantar)" : "Adiantado (Atrasar)";
+        });
+
+        const queueBody = document.querySelector('#queueTable tbody');
+        queueBody.innerHTML = "";
+        filaDeRequisicoes.forEach((req, i) => {
+            const row = queueBody.insertRow();
+            row.insertCell(0).innerText = `${i + 1}º`;
+            row.insertCell(1).innerText = req.nome;
+            row.insertCell(2).innerText = req.envioOriginal;
+            row.insertCell(3).innerText = converterSegundosParaHorario(req.horarioDeEnvioSincronizado);
+        });
+    }
+</script>
+
+</body>
+</html>
