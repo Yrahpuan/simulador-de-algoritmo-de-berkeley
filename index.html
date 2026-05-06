@@ -187,7 +187,7 @@
             const delay = infoDelay ? infoDelay.delay : 0;
             
             req.horarioDeEnvioSincronizado = converterHorarioParaSegundos(req.envioOriginal) + delay;
-            console.log(infoDelay, delay, req.horarioDeEnvioSincronizado)
+            //console.log(infoDelay, delay, req.horarioDeEnvioSincronizado)
         });
 
         const filaDeEnviosOg = organizarFilaDeRequisicoes();
@@ -214,10 +214,10 @@
             row.insertCell(2).innerText = req.envioOriginal;
         });
 
-        const queueReqOgBody = document.querySelector('#queueReqTable tbody');
-        queueReqOgBody.innerHTML = "";
+        const queueReqSyncTable = document.querySelector('#queueReqTable tbody');
+        queueReqSyncTable.innerHTML = "";
         filaDeRequisicoes.forEach((req, i) => {
-            const row = queueReqOgBody.insertRow();
+            const row = queueReqSyncTable.insertRow();
             row.insertCell(0).innerText = `${i + 1}º`;
             row.insertCell(1).innerText = req.nome;
             row.insertCell(2).innerText = converterSegundosParaHorario(req.horarioDeEnvioSincronizado);

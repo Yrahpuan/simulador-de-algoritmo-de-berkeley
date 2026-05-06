@@ -59,7 +59,11 @@ function organizarFilaDeRequisicoesOriginal(){
 }
 
 function organizarFilaDeRequisicoes() {
-	const filaDeEnviosOg = filaDeRequisicoes
+	const filaDeEnviosOg = []
+	filaDeRequisicoes.forEach((req) => {
+		filaDeEnviosOg.push(req)
+	})
+
     for (let i = 0; i < filaDeRequisicoes.length; i++) {
         for (let j = 0; j < filaDeRequisicoes.length - i - 1; j++) {
             if (filaDeRequisicoes[j].horarioDeEnvioSincronizado > filaDeRequisicoes[j + 1].horarioDeEnvioSincronizado) {
@@ -73,9 +77,9 @@ function organizarFilaDeRequisicoes() {
     for(let i = 0; i < filaDeEnviosOg.length; i++){
     	for(let j = 0; j < filaDeEnviosOg.length - i - 1; j++){
     		if(converterHorarioParaSegundos(filaDeEnviosOg[j].envioOriginal) > converterHorarioParaSegundos(filaDeEnviosOg[j + 1].envioOriginal)){
-    			let temp = filaDeEnviosOg[j].envioOriginal
-    			filaDeEnviosOg[j].envioOriginal = filaDeEnviosOg[j + 1].envioOriginal
-    			filaDeEnviosOg[j + 1].envioOriginal = temp
+    			let temp = filaDeEnviosOg[j]
+    			filaDeEnviosOg[j] = filaDeEnviosOg[j + 1]
+    			filaDeEnviosOg[j + 1] = temp
     		}
     	}
     }
