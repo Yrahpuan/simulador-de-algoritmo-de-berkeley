@@ -59,15 +59,28 @@ function organizarFilaDeRequisicoesOriginal(){
 }
 
 function organizarFilaDeRequisicoes() {
+	const filaDeEnviosOg = filaDeRequisicoes
     for (let i = 0; i < filaDeRequisicoes.length; i++) {
         for (let j = 0; j < filaDeRequisicoes.length - i - 1; j++) {
             if (filaDeRequisicoes[j].horarioDeEnvioSincronizado > filaDeRequisicoes[j + 1].horarioDeEnvioSincronizado) {
-                let temp = filaDeRequisicoes[j];
+         		let temp = filaDeRequisicoes[j];
                 filaDeRequisicoes[j] = filaDeRequisicoes[j + 1];
                 filaDeRequisicoes[j + 1] = temp;
             }
         }
     }
+
+    for(let i = 0; i < filaDeEnviosOg.length; i++){
+    	for(let j = 0; j < filaDeEnviosOg.length - i - 1; j++){
+    		if(converterHorarioParaSegundos(filaDeEnviosOg[j].envioOriginal) > converterHorarioParaSegundos(filaDeEnviosOg[j + 1].envioOriginal)){
+    			let temp = filaDeEnviosOg[j].envioOriginal
+    			filaDeEnviosOg[j].envioOriginal = filaDeEnviosOg[j + 1].envioOriginal
+    			filaDeEnviosOg[j + 1].envioOriginal = temp
+    		}
+    	}
+    }
+
+    return filaDeEnviosOg
 }
 
 let filaDeClientes = [];

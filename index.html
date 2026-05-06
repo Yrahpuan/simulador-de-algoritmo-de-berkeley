@@ -69,14 +69,27 @@
         </div>
 
         <div class="section">
-            <h3>Fila de Acesso ao Recurso (Ordenada)</h3>
-            <table id="queueTable">
+            <h3>Fila de Acesso ao Recurso (Dessincronizado)</h3>
+            <table id="queueSendtimeOgTable">
                 <thead>
                     <tr>
                         <th>Ordem</th>
                         <th>Processo</th>
-                        <th>Hora Envio (Local)</th>
-                        <th>Hora Envio (Sincronizada)</th>
+                        <th>Hora Envio</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h3>Fila de Acesso ao Recurso (Sincronizado)</h3>
+            <table id="queueReqTable">
+                <thead>
+                    <tr>
+                        <th>Ordem</th>
+                        <th>Processo</th>
+                        <th>Hora Envio</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -177,7 +190,7 @@
             console.log(infoDelay, delay, req.horarioDeEnvioSincronizado)
         });
 
-        organizarFilaDeRequisicoes();
+        const filaDeEnviosOg = organizarFilaDeRequisicoes();
 
         document.getElementById('resultsArea').style.display = "block";
         document.getElementById('logicClock').innerText = converterSegundosParaHorario(hSinc);
@@ -192,14 +205,22 @@
             row.insertCell(3).innerText = d.delay >= 0 ? "Atrasado (Adiantar)" : "Adiantado (Atrasar)";
         });
 
-        const queueBody = document.querySelector('#queueTable tbody');
-        queueBody.innerHTML = "";
-        filaDeRequisicoes.forEach((req, i) => {
-            const row = queueBody.insertRow();
+        const queueSendtimeOgBody = document.querySelector('#queueSendtimeOgTable tbody');
+        queueSendtimeOgBody.innerHTML = "";
+        filaDeEnviosOg.forEach((req, i) => {
+            const row = queueSendtimeOgBody.insertRow();
             row.insertCell(0).innerText = `${i + 1}º`;
             row.insertCell(1).innerText = req.nome;
             row.insertCell(2).innerText = req.envioOriginal;
-            row.insertCell(3).innerText = converterSegundosParaHorario(req.horarioDeEnvioSincronizado);
+        });
+
+        const queueReqOgBody = document.querySelector('#queueReqTable tbody');
+        queueReqOgBody.innerHTML = "";
+        filaDeRequisicoes.forEach((req, i) => {
+            const row = queueReqOgBody.insertRow();
+            row.insertCell(0).innerText = `${i + 1}º`;
+            row.insertCell(1).innerText = req.nome;
+            row.insertCell(2).innerText = converterSegundosParaHorario(req.horarioDeEnvioSincronizado);
         });
     }
 </script>
