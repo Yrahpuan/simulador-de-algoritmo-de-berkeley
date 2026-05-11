@@ -1,4 +1,4 @@
 # Simulador criado por:
 
-Irapuam Junio da Silva Santos\n
-Mayara Lima Miranda
+- Irapuam Junio da Silva Santos
+- Mayara Lima Miranda
